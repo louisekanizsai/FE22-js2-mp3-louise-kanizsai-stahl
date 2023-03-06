@@ -1,3 +1,15 @@
+import Cookie from "../node_modules/js-cookie/dist/js.cookie.mjs"
+
+// Cookie.remove("productsInCart");
+const inCart = Cookie.get("productsInCart");
+const savedArr = Cookie.get("cartArray");
+
+document.querySelector("#amount").innerText = inCart;
+
+console.log(document.cookie);
+
+console.log(Cookie.get("productsInCart"))
+
 class Products {
     #img;
     #name;
@@ -11,9 +23,21 @@ class Products {
     #productsInCart;
     constructor() {
         this.#baseUrl = 'https://mp3-webbshop-default-rtdb.europe-west1.firebasedatabase.app/';
-        this.#productsInCart = 0;
-        this.createCart();
-        this.getFirebase()
+        if (Cookie.get("productsInCart") == undefined) {
+            this.#productsInCart = 0;
+            this.createCart();
+            this.getFirebase()
+                .then(value => {
+                    this.createProductCards(value);
+                })
+                .then(
+                    () => {
+                        this.currentBalance();
+                    }
+                )
+        }
+        else {
+            this.getFirebase()
             .then(value => {
                 this.createProductCards(value);
             })
@@ -22,6 +46,8 @@ class Products {
                     this.currentBalance();
                 }
             )
+        }
+
     }
     async getFirebase() {
         const url = this.#baseUrl + '.json';
@@ -49,6 +75,7 @@ class Products {
             this.#buyBtn.addEventListener('click', () => {
                 this.checkBalance(index);
                 this.addToCart(index);
+                this.addCookies();
             })
             this.#balance = product.balance;
             if (this.#balance == 0) {
@@ -86,15 +113,21 @@ class Products {
         }
         this.#cartArray = Object.entries(this.#cartObj);
     }
-    addToCart(index){
+    addToCart(index) {
         this.#cartArray[index][1]++;
 
-        console.log("cartArr:",this.#cartArray);
+        console.log("cartArr:", this.#cartArray);
 
         this.#productsInCart++;
-        console.log("products in cart:",this.#productsInCart);
+        console.log("products in cart:", this.#productsInCart);
+    }
+    addCookies() {
+        Cookie.remove("procuctsInCart");
+        Cookie.set("productsInCart", this.#productsInCart, { expires: 1 });
+        Cookie.set("cartArray",this.#cartArray, {expires: 1});
     }
 }
 
 const el = new Products();
 el.checkBalance();
+// console.log(document.cookie);
