@@ -1,4 +1,4 @@
-class Products{
+class Products {
     #img;
     #name;
     #price;
@@ -6,17 +6,22 @@ class Products{
     #baseUrl;
     #buyBtn;
     #balanceArray;
-    constructor(){
+    #cartObj;
+    #cartArray;
+    #productsInCart;
+    constructor() {
         this.#baseUrl = 'https://mp3-webbshop-default-rtdb.europe-west1.firebasedatabase.app/';
+        this.#productsInCart = 0;
+        this.createCart();
         this.getFirebase()
-        .then(value => {
-            this.createProductCards(value);
-        })
-        .then(
-            ()=>{
-                this.currentBalance();
-            }
-        )
+            .then(value => {
+                this.createProductCards(value);
+            })
+            .then(
+                () => {
+                    this.currentBalance();
+                }
+            )
     }
     async getFirebase() {
         const url = this.#baseUrl + '.json';
@@ -24,7 +29,7 @@ class Products{
         const productArray = await response.json();
         return productArray;
     }
-    createProductCards(array){
+    createProductCards(array) {
         console.log(array);
         array.forEach((product, index) => {
             const productCard = document.createElement('div');
@@ -40,28 +45,29 @@ class Products{
             this.#buyBtn.id = index;
             console.log(index);
             productCard.append(this.#img, this.#name, this.#price, this.#buyBtn);
-            
-            this.#buyBtn.addEventListener('click', ()=>{
+
+            this.#buyBtn.addEventListener('click', () => {
                 this.checkBalance(index);
+                this.addToCart(index);
             })
             this.#balance = product.balance;
-            if(this.#balance == 0) {
+            if (this.#balance == 0) {
                 this.#buyBtn.disabled = true;
             }
         });
         const buttons = document.querySelectorAll('buttons');
     }
-    async currentBalance(){
+    async currentBalance() {
         const productArray = await this.getFirebase();
-        this.#balanceArray =[];
+        this.#balanceArray = [];
         productArray.forEach(
-            product=>{
+            product => {
                 this.#balanceArray.push(product.balance)
             }
         )
     }
-    checkBalance(index){
-        if(this.#balanceArray[index] > 0){
+    checkBalance(index) {
+        if (this.#balanceArray[index] > 0) {
             this.#balanceArray[index]--;
 
         }
@@ -70,6 +76,25 @@ class Products{
         }
         console.log(this.#balanceArray, index);
     }
+    createCart() {
+        this.#cartObj = {
+            crystals4: 0,
+            incense: 0,
+            witchkit: 0,
+            dreamcatcher: 0,
+            crystals15: 0
+        }
+        this.#cartArray = Object.entries(this.#cartObj);
+    }
+    addToCart(index){
+        this.#cartArray[index][1]++;
+
+        console.log("cartArr:",this.#cartArray);
+
+        this.#productsInCart++;
+        console.log("products in cart:",this.#productsInCart);
+    }
 }
+
 const el = new Products();
 el.checkBalance();
