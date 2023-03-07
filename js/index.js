@@ -28,8 +28,8 @@ class Products {
             this.createCart();
             this.currentBalance();
             this.getFirebase()
-                .then(value => {
-                    this.createProductCards(value);
+                .then(products => {
+                    this.createProductCards(products);
                 })
         }
         else { // om cookies finns: skapa cart efter cookies. 
@@ -39,8 +39,8 @@ class Products {
             this.#balanceArray = JSON.parse(Cookie.get("balanceArray"));
             this.displayCookieInCart();
             this.getFirebase()
-                .then(value => {
-                    this.createProductCards(value);
+                .then(products => {
+                    this.createProductCards(products);
                 })
         }
 
@@ -66,17 +66,13 @@ class Products {
             this.#buyBtn.id = index;
             productCard.append(this.#img, this.#name, this.#price, this.#buyBtn);
 
-            // console.log(this.#balanceArray);
-
-
-// KLICK PÅ KÖPKNAPP 
+            // KLICK PÅ KÖPKNAPP 
             if (this.#balanceArray[index] > 0) {
                 this.#buyBtn.addEventListener('click', () => {
                     this.checkBalance(index);
                     this.addToCart(index);
                     this.addCookies();
                     this.displayCookieInCart();
-                    console.log(this.#balanceArray);
                 })
             } else if (this.#balanceArray[index] == 0) {
                 this.#buyBtn.disabled = true;
@@ -97,7 +93,7 @@ class Products {
                 this.#balanceArray.push(product.balance)
             }
         )
-        Cookie.set("savedBalanceArr",JSON.stringify(this.#balanceArray), { expires: 1 });
+        Cookie.set("savedBalanceArr", JSON.stringify(this.#balanceArray), { expires: 1 });
     }
     // uppdaterar vårt låtsassaldo, kollar så att det inte blir 0
     checkBalance(index) {
@@ -126,12 +122,7 @@ class Products {
     // anropas på eventlistener knapp. lägger till +1 på rätt "keys" värde 
     addToCart(index) {
         this.#cartArray[index][1]++;
-
-        console.log("cartArr:", this.#cartArray);
-
-        // uppdaterar productsincards
         this.#productsInCart++;
-        console.log("products in cart:", this.#productsInCart);
     }
     addCookies() {
         Cookie.set("productsInCart", this.#productsInCart, { expires: 1 });
@@ -151,4 +142,3 @@ cartIcon.addEventListener("click", () => {
 
 const el = new Products();
 el.checkBalance();
-// console.log(document.cookie);

@@ -14,25 +14,19 @@ class ShoppingCart {
     #savedBalanceArr;
     #product1;
     constructor() {
-        // this.currentBalance()
         this.#savedBalanceArr = JSON.parse(Cookie.get("savedBalanceArr"));
         this.#balanceArr = JSON.parse(Cookie.get("balanceArray"));
-        // .then(()=>{
         this.createShoppingCart();
-        // })
-
 
         this.#product1 = [];
         this.#productNames = [];
         this.#productPrices = [];
         this.#productImgs = [];
-        // this.#balanceArr = [];
     }
     async createShoppingCart() {
         const shoppingCartContainer = document.querySelector("#shoppingCartContainer");
 
         this.#savedProductsFromCookies = JSON.parse(Cookie.get("cartArray"));
-        // this.#balanceArr = JSON.parse(Cookie.get("balanceArray"));
 
         const shoppingCart = await this.getFirebase();
 
@@ -58,10 +52,6 @@ class ShoppingCart {
                 removeOneBtn.id = "remove" + index;
                 addOneBtn.innerText = "+";
                 removeOneBtn.innerText = "-";
-
-                this.#product1.push(product[1]);
-
-
                 productInfo.append(productName, productImg, removeOneBtn, addOneBtn, amountPerProduct, productPrice, totalPerItemEl);
                 amountPerProduct.id = "amountText" + index;
                 amountPerProduct.innerText = "Antal: " + product[1];
@@ -70,19 +60,12 @@ class ShoppingCart {
                 const totalPerItem = (product[1] * this.#productPrices[index]);
                 totalPerItemEl.innerText = "Totalt: " + totalPerItem + " kr";
                 productImg.src = this.#productImgs[index];
+                
+                this.#product1.push(product[1]);
 
                 if (product[1] <= 1) {
                     removeOneBtn.disabled = true;
                 }
-                // } else {
-                //     removeOneBtn.addEventListener("click", ()=>{
-                //         // this.product1--;
-                //         this.addToBalance(this.#product1,index);
-
-                //         // ta bort vara från cart
-                //     })
-                // }
-
                 if (product[1] >= this.#balanceArr[index]) {
                     addOneBtn.disabled = true;
                 }
@@ -91,19 +74,12 @@ class ShoppingCart {
                         removeOneBtn.disabled = false;
                         this.removeFromBalance(index);
                         this.#savedProductsFromCookies[index][1]++;
-                        console.log(this.#savedProductsFromCookies);
                         amountPerProduct.innerText = "Antal: " + product[1];
                         this.addCookies();
-                        console.log(this.#balanceArr)
-
-                        // lägg till eventlistener igen på - om man klickar på +
                     })
                     removeOneBtn.addEventListener("click", () => {
-                        // this.product1--;
                         this.#savedProductsFromCookies[index][1]--;
                         this.addToBalance(this.#product1[index], index);
-
-                        // ta bort vara från cart
                     })
                 }
             }
@@ -115,53 +91,31 @@ class ShoppingCart {
         const response = await fetch(url);
         const productArray = await response.json();
         return productArray;
-        // console.log(productArray)
     }
-    // async currentBalance() {
-    //     // const productArray = await this.getFirebase();
-    //     this.#balanceArr = [];
-    //     productArray.forEach(
-    //         product => { 
-    //             this.#balanceArr.push(product.balance)
-    //         }
-    //     )
-    //     console.log(this.#balanceArr)
-    // }
     removeFromBalance(index) {
         if (this.#balanceArr[index] == 1) {
             document.getElementById("add" + index).disabled = true;
             this.#balanceArr[index]--;
             this.#product1[index]++;
-            document.querySelector("#amountText" + index).innerText = "Antal: " + this.#product1[index] + "ändrad i removefrombalance if";
-            console.log(this.#product1[index]);
+            document.querySelector("#amountText" + index).innerText = "Antal: " + this.#product1[index];
         }
         else if (this.#balanceArr[index] > 0) {
             this.#balanceArr[index]--;
             this.#product1[index]++;
-            console.log(this.#product1[index]);
-            document.querySelector("#amountText" + index).innerText = "Antal: " + this.#product1[index] + "ändrad i removefrombalance else if";
-            console.log(this.#product1[index])
-
+            document.querySelector("#amountText" + index).innerText = "Antal: " + this.#product1[index];
         }
     }
     addToBalance(amount, index) {
         if (amount == 2) { // om antal är 1 => kan inte klicka på minus mer
             document.getElementById("remove" + index).disabled = true;
             this.#balanceArr[index]++;
-            console.log("if händer")
             this.#product1[index]--;
-            console.log("amount: ", amount)
-            console.log(this.#balanceArr);
-            document.querySelector("#amountText" + index).innerText = "Antal: " + this.#product1[index] + "ändrad i addtobalance if";
+            document.querySelector("#amountText" + index).innerText = "Antal: " + this.#product1[index];
         }
         else if (amount <= this.#savedBalanceArr[index])
-        //if(x får inte vara större än get firebase) 
         {
             this.#product1[index]--;
             this.#balanceArr[index]++;
-            console.log(this.#balanceArr)
-            console.log("else if")
-            console.log("amount: ", amount, "product1: ", this.#product1[index])
             document.querySelector("#amountText" + index).innerText = "Antal: " + this.#product1[index] + "ändrad i addtobalance else if";
         }
         else {
@@ -176,7 +130,3 @@ class ShoppingCart {
 }
 
 const hej = new ShoppingCart();
-
-
-// createShoppingCart();
-
