@@ -11,16 +11,18 @@ class ShoppingCart {
     #productImgs;
     #balanceArr;
     #savedProductsFromCookies;
-    #addOneBtn;
+    #savedBalanceArr;
+    #product1;
     constructor() {
         // this.currentBalance()
+        this.#savedBalanceArr = JSON.parse(Cookie.get("savedBalanceArr"));
         this.#balanceArr = JSON.parse(Cookie.get("balanceArray"));
         // .then(()=>{
-            this.createShoppingCart();
+        this.createShoppingCart();
         // })
-        
-        
-        
+
+
+        this.#product1 = [];
         this.#productNames = [];
         this.#productPrices = [];
         this.#productImgs = [];
@@ -35,9 +37,9 @@ class ShoppingCart {
         const shoppingCart = await this.getFirebase();
 
         shoppingCart.forEach(item => {
-            this.#productNames.push(item.name); 
-            this.#productPrices.push(item.price); 
-            this.#productImgs.push(item.img); 
+            this.#productNames.push(item.name);
+            this.#productPrices.push(item.price);
+            this.#productImgs.push(item.img);
         })
 
         this.#savedProductsFromCookies.forEach((product, index) => {
@@ -50,31 +52,58 @@ class ShoppingCart {
                 const productPrice = document.createElement("p");
                 const totalPerItemEl = document.createElement("p");
                 const productImg = document.createElement("img");
-                this.#addOneBtn = document.createElement("button");
-                this.#addOneBtn.id = "add"+index;
+                const addOneBtn = document.createElement("button");
+                addOneBtn.id = "add" + index;
                 const removeOneBtn = document.createElement("button");
-                this.#addOneBtn.innerText = "+";
+                removeOneBtn.id = "remove" + index;
+                addOneBtn.innerText = "+";
                 removeOneBtn.innerText = "-";
 
-                productInfo.append(productName,productImg,removeOneBtn,this.#addOneBtn,amountPerProduct,productPrice,totalPerItemEl);
-                amountPerProduct.innerText = "Antal: "+product[1];
+                this.#product1.push(product[1]);
+
+
+                productInfo.append(productName, productImg, removeOneBtn, addOneBtn, amountPerProduct, productPrice, totalPerItemEl);
+                amountPerProduct.id = "amountText" + index;
+                amountPerProduct.innerText = "Antal: " + product[1];
                 productName.innerText = this.#productNames[index];
                 productPrice.innerText = "Pris per st: " + this.#productPrices[index] + " kr";
                 const totalPerItem = (product[1] * this.#productPrices[index]);
                 totalPerItemEl.innerText = "Totalt: " + totalPerItem + " kr";
                 productImg.src = this.#productImgs[index];
 
-                if(product[1] >= this.#balanceArr[index]){
-                    this.#addOneBtn.disabled = true;
+                if (product[1] <= 1) {
+                    removeOneBtn.disabled = true;
+                }
+                // } else {
+                //     removeOneBtn.addEventListener("click", ()=>{
+                //         // this.product1--;
+                //         this.addToBalance(this.#product1,index);
+
+                //         // ta bort vara från cart
+                //     })
+                // }
+
+                if (product[1] >= this.#balanceArr[index]) {
+                    addOneBtn.disabled = true;
                 }
                 else {
-                    this.#addOneBtn.addEventListener("click", ()=>{
-                        this.balance(index);
+                    addOneBtn.addEventListener("click", () => {
+                        removeOneBtn.disabled = false;
+                        this.removeFromBalance(index);
                         this.#savedProductsFromCookies[index][1]++;
                         console.log(this.#savedProductsFromCookies);
-                        amountPerProduct.innerText = "Antal: "+product[1];
+                        amountPerProduct.innerText = "Antal: " + product[1];
                         this.addCookies();
                         console.log(this.#balanceArr)
+
+                        // lägg till eventlistener igen på - om man klickar på +
+                    })
+                    removeOneBtn.addEventListener("click", () => {
+                        // this.product1--;
+                        this.#savedProductsFromCookies[index][1]--;
+                        this.addToBalance(this.#product1[index], index);
+
+                        // ta bort vara från cart
                     })
                 }
             }
@@ -98,18 +127,50 @@ class ShoppingCart {
     //     )
     //     console.log(this.#balanceArr)
     // }
-    balance(index){
+    removeFromBalance(index) {
         if (this.#balanceArr[index] == 1) {
-            document.getElementById("add"+index).disabled = true;
+            document.getElementById("add" + index).disabled = true;
             this.#balanceArr[index]--;
+            this.#product1[index]++;
+            document.querySelector("#amountText" + index).innerText = "Antal: " + this.#product1[index] + "ändrad i removefrombalance if";
+            console.log(this.#product1[index]);
         }
         else if (this.#balanceArr[index] > 0) {
             this.#balanceArr[index]--;
+            this.#product1[index]++;
+            console.log(this.#product1[index]);
+            document.querySelector("#amountText" + index).innerText = "Antal: " + this.#product1[index] + "ändrad i removefrombalance else if";
+            console.log(this.#product1[index])
 
         }
     }
-    addCookies(){
+    addToBalance(amount, index) {
+        if (amount == 2) { // om antal är 1 => kan inte klicka på minus mer
+            document.getElementById("remove" + index).disabled = true;
+            this.#balanceArr[index]++;
+            console.log("if händer")
+            this.#product1[index]--;
+            console.log("amount: ", amount)
+            console.log(this.#balanceArr);
+            document.querySelector("#amountText" + index).innerText = "Antal: " + this.#product1[index] + "ändrad i addtobalance if";
+        }
+        else if (amount <= this.#savedBalanceArr[index])
+        //if(x får inte vara större än get firebase) 
+        {
+            this.#product1[index]--;
+            this.#balanceArr[index]++;
+            console.log(this.#balanceArr)
+            console.log("else if")
+            console.log("amount: ", amount, "product1: ", this.#product1[index])
+            document.querySelector("#amountText" + index).innerText = "Antal: " + this.#product1[index] + "ändrad i addtobalance else if";
+        }
+        else {
+            console.log("else händer")
+        }
+    }
+    addCookies() {
         Cookie.set("cartArray", JSON.stringify(this.#savedProductsFromCookies), { expires: 1 });
+        Cookie.set("balanceArray", JSON.stringify(this.#balanceArr), { expires: 1 })
     }
 
 }

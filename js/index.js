@@ -4,6 +4,7 @@ import Cookie from "../node_modules/js-cookie/dist/js.cookie.mjs"
 // Cookie.remove("productsInCart");
 // Cookie.remove("cartArray");
 // Cookie.remove("balanceArray");
+// Cookie.remove("savedBalanceArr");
 
 console.log(document.cookie);
 
@@ -96,6 +97,7 @@ class Products {
                 this.#balanceArray.push(product.balance)
             }
         )
+        Cookie.set("savedBalanceArr",JSON.stringify(this.#balanceArray), { expires: 1 });
     }
     // uppdaterar vårt låtsassaldo, kollar så att det inte blir 0
     checkBalance(index) {
