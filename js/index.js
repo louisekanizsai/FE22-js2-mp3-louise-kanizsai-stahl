@@ -1,14 +1,16 @@
 import Cookie from "../node_modules/js-cookie/dist/js.cookie.mjs"
 
+// nollstället cookies
 // Cookie.remove("productsInCart");
+// Cookie.remove("cartArray");
+
+// :)
 const inCart = Cookie.get("productsInCart");
 const savedArr = Cookie.get("cartArray");
 
-document.querySelector("#amount").innerText = inCart;
-
 console.log(document.cookie);
 
-console.log(Cookie.get("productsInCart"))
+// console.log(Cookie.get("productsInCart"))
 
 class Products {
     #img;
@@ -23,6 +25,7 @@ class Products {
     #productsInCart;
     constructor() {
         this.#baseUrl = 'https://mp3-webbshop-default-rtdb.europe-west1.firebasedatabase.app/';
+        // kollar om cookies finns. om inte: skapa cart 
         if (Cookie.get("productsInCart") == undefined) {
             this.#productsInCart = 0;
             this.createCart();
@@ -36,16 +39,19 @@ class Products {
                     }
                 )
         }
-        else {
+        else { // om cookies finns: skapa efter cookies
+            // här vet vi att cartarray behöver vara något annat än om det inte finns cookies alls. cookie.getcartarray ger ett konstigt format :( måste parsea manuellt?
+            this.#cartArray = Cookie.get("cartArray"); // FEL
+            this.displayCookieInCart();
             this.getFirebase()
-            .then(value => {
-                this.createProductCards(value);
-            })
-            .then(
-                () => {
-                    this.currentBalance();
-                }
-            )
+                .then(value => {
+                    this.createProductCards(value);
+                })
+                .then(
+                    () => {
+                        this.currentBalance();
+                    }
+                )
         }
 
     }
@@ -69,40 +75,45 @@ class Products {
             this.#buyBtn = document.createElement('button');
             this.#buyBtn.innerText = 'Add to cart';
             this.#buyBtn.id = index;
-            console.log(index);
             productCard.append(this.#img, this.#name, this.#price, this.#buyBtn);
 
+            // KLICK PÅ KÖPKNAPP 
             this.#buyBtn.addEventListener('click', () => {
                 this.checkBalance(index);
                 this.addToCart(index);
                 this.addCookies();
+                this.displayCookieInCart();
             })
+
+            // disable button om saldo = 0
             this.#balance = product.balance;
             if (this.#balance == 0) {
                 this.#buyBtn.disabled = true;
             }
         });
-        const buttons = document.querySelectorAll('buttons');
     }
+    // skapar en array (balancearray) som bara innehåller saldot för varje produkt i dess index
     async currentBalance() {
         const productArray = await this.getFirebase();
         this.#balanceArray = [];
         productArray.forEach(
-            product => {
+            product => { 
                 this.#balanceArray.push(product.balance)
             }
         )
     }
+    // uppdaterar vårt låtsassaldo, kollar så att det inte blir 0
     checkBalance(index) {
-        if (this.#balanceArray[index] > 0) {
+        if (this.#balanceArray[index] > 0) { // ok att få error här
             this.#balanceArray[index]--;
 
         }
         else {
             document.getElementById(index).disabled = true;
         }
-        console.log(this.#balanceArray, index);
+        // console.log(this.#balanceArray, index);
     }
+    // händer om det inte finns cookies. skapar objekt som ska läggas till i cookies. cartarray: varje index har key value pair
     createCart() {
         this.#cartObj = {
             crystals4: 0,
@@ -113,18 +124,23 @@ class Products {
         }
         this.#cartArray = Object.entries(this.#cartObj);
     }
+    // anropas på eventlistener knapp. lägger till +1 på rätt "keys" värde 
     addToCart(index) {
         this.#cartArray[index][1]++;
 
         console.log("cartArr:", this.#cartArray);
 
+        // uppdaterar productsincards
         this.#productsInCart++;
         console.log("products in cart:", this.#productsInCart);
     }
     addCookies() {
-        Cookie.remove("procuctsInCart");
         Cookie.set("productsInCart", this.#productsInCart, { expires: 1 });
-        Cookie.set("cartArray",this.#cartArray, {expires: 1});
+        Cookie.set("cartArray", this.#cartArray, { expires: 1 });
+    }
+    displayCookieInCart(){
+        const inCart =  Cookie.get("productsInCart");
+        document.querySelector("#amount").innerText = inCart;
     }
 }
 
