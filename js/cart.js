@@ -78,6 +78,7 @@ class ShoppingCart {
                         this.addCookies();
                     })
                     removeOneBtn.addEventListener("click", () => {
+                        addOneBtn.disabled = false;
                         this.#savedProductsFromCookies[index][1]--;
                         this.addToBalance(this.#product1[index], index);
                     })
@@ -116,7 +117,7 @@ class ShoppingCart {
         {
             this.#product1[index]--;
             this.#balanceArr[index]++;
-            document.querySelector("#amountText" + index).innerText = "Antal: " + this.#product1[index] + "ändrad i addtobalance else if";
+            document.querySelector("#amountText" + index).innerText = "Antal: " + this.#product1[index];
         }
         else {
             console.log("else händer")
