@@ -65,7 +65,7 @@ class Products {
             this.#buyBtn.id = index;
             productCard.append(this.#img, this.#name, this.#price, this.#buyBtn);
 
-            console.log(this.#balanceArray);
+            // console.log(this.#balanceArray);
 
 
 // KLICK PÅ KÖPKNAPP 
@@ -149,3 +149,4 @@ cartIcon.addEventListener("click", () => {
 
 const el = new Products();
 el.checkBalance();
+// console.log(document.cookie);
