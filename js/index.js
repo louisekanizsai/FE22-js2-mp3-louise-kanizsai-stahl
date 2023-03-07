@@ -10,8 +10,6 @@ const savedArr = Cookie.get("cartArray");
 
 console.log(document.cookie);
 
-// console.log(Cookie.get("productsInCart"))
-
 class Products {
     #img;
     #name;
@@ -25,7 +23,7 @@ class Products {
     #productsInCart;
     constructor() {
         this.#baseUrl = 'https://mp3-webbshop-default-rtdb.europe-west1.firebasedatabase.app/';
-        // kollar om cookies finns. om inte: skapa cart 
+        // kollar om cookies finns. om inte: skapa cart
         if (Cookie.get("productsInCart") == undefined) {
             this.#productsInCart = 0;
             this.createCart();
@@ -39,9 +37,9 @@ class Products {
                     }
                 )
         }
-        else { // om cookies finns: skapa efter cookies
-            // här vet vi att cartarray behöver vara något annat än om det inte finns cookies alls. cookie.getcartarray ger ett konstigt format :( måste parsea manuellt?
-            this.#cartArray = Cookie.get("cartArray"); // FEL
+        else { // om cookies finns: skapa cart efter cookies. 
+            this.#cartArray = JSON.parse(Cookie.get("cartArray")); 
+            this.#productsInCart = Cookie.get("productsInCart");
             this.displayCookieInCart();
             this.getFirebase()
                 .then(value => {
@@ -62,7 +60,6 @@ class Products {
         return productArray;
     }
     createProductCards(array) {
-        console.log(array);
         array.forEach((product, index) => {
             const productCard = document.createElement('div');
             document.getElementById('productContainer').append(productCard);
@@ -136,7 +133,7 @@ class Products {
     }
     addCookies() {
         Cookie.set("productsInCart", this.#productsInCart, { expires: 1 });
-        Cookie.set("cartArray", this.#cartArray, { expires: 1 });
+        Cookie.set("cartArray", JSON.stringify(this.#cartArray), { expires: 1 });
     }
     displayCookieInCart(){
         const inCart =  Cookie.get("productsInCart");
