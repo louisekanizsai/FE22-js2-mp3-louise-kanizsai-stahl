@@ -15,11 +15,13 @@ class ShoppingCart {
     #savedBalanceArr;
     #savedProductsInCart;
     #product1;
+    #totalAmountP;
     constructor() {
         this.#savedBalanceArr = JSON.parse(Cookie.get("savedBalanceArr"));
         this.#balanceArr = JSON.parse(Cookie.get("balanceArray"));
         this.#savedProductsInCart = Cookie.get("productsInCart");
         this.#savedProductsFromCookies = JSON.parse(Cookie.get("cartArray"));
+        this.#totalAmountP = document.querySelector("#totalAmount");
 
         this.createShoppingCart();
 
@@ -104,6 +106,7 @@ class ShoppingCart {
             }
 
         })
+        this.#totalAmountP.innerText = "x"
         const cancelBtn = document.querySelector("#cancel");
         cancelBtn.addEventListener("click", () => {
 
@@ -113,7 +116,7 @@ class ShoppingCart {
                     this.#savedProductsFromCookies[index][1] -= product[1];
                     this.addCookies();
                     document.getElementById("productInfoCard" + index).remove();
-                    location.reload();
+                    location.assign("../index.html")
                 }
             })
         })
@@ -138,6 +141,7 @@ class ShoppingCart {
                       }, "500");
                 })
         })
+        
     }
     async getFirebase() {
         const url = 'https://mp3-webbshop-default-rtdb.europe-west1.firebasedatabase.app/' + '.json';
