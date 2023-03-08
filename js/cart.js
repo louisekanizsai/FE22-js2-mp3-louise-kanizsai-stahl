@@ -4,6 +4,7 @@ console.log(document.cookie);
 
 // Cookie.remove("cartArray");
 // Cookie.remove("balanceArray");
+// Cookie.remove("productsInCart");
 
 class ShoppingCart {
     #productNames;
@@ -12,10 +13,13 @@ class ShoppingCart {
     #balanceArr;
     #savedProductsFromCookies;
     #savedBalanceArr;
+    #savedProductsInCart;
     #product1;
     constructor() {
         this.#savedBalanceArr = JSON.parse(Cookie.get("savedBalanceArr"));
         this.#balanceArr = JSON.parse(Cookie.get("balanceArray"));
+        this.#savedProductsInCart = Cookie.get("productsInCart");
+
         this.createShoppingCart();
 
         this.#product1 = [];
@@ -57,32 +61,39 @@ class ShoppingCart {
                 amountPerProduct.innerText = "Antal: " + product[1];
                 productName.innerText = this.#productNames[index];
                 productPrice.innerText = "Pris per st: " + this.#productPrices[index] + " kr";
-                const totalPerItem = (product[1] * this.#productPrices[index]);
+                let totalPerItem = (product[1] * this.#productPrices[index]);
                 totalPerItemEl.innerText = "Totalt: " + totalPerItem + " kr";
                 productImg.src = this.#productImgs[index];
-                
+                const trashCan = document.createElement("img");
+
                 this.#product1.push(product[1]);
 
-                if (product[1] <= 1) {
-                    removeOneBtn.disabled = true;
-                }
-                if (product[1] >= this.#balanceArr[index]) {
-                    addOneBtn.disabled = true;
-                }
-                else {
-                    addOneBtn.addEventListener("click", () => {
-                        removeOneBtn.disabled = false;
+                addOneBtn.addEventListener("click", () => {
+                    if (product[1] >= this.#savedBalanceArr[index]) { // om antal produkter har nått så många som finns i saldot, kan man inte lägga till fler
+                        alert("Det finns inga fler i lager av denna vara!");
+                    }
+                    else {
                         this.removeFromBalance(index);
                         this.#savedProductsFromCookies[index][1]++;
                         amountPerProduct.innerText = "Antal: " + product[1];
                         this.addCookies();
-                    })
-                    removeOneBtn.addEventListener("click", () => {
-                        addOneBtn.disabled = false;
+                        totalPerItem = (product[1] * this.#productPrices[index]);
+                        totalPerItemEl.innerText = "Totalt: " + totalPerItem + " kr";
+                    }
+                }
+                )
+                removeOneBtn.addEventListener("click",()=>{
+                    if(product[1] <= 1) { // man kan inte ta bort den sista produkten genom att klicka på minus
+                        alert("Klicka på papperskorgen för att ta bort denna vara.");
+                    }
+                    else {
                         this.#savedProductsFromCookies[index][1]--;
                         this.addToBalance(this.#product1[index], index);
-                    })
-                }
+                        this.addCookies();
+                        totalPerItem = (product[1] * this.#productPrices[index]);
+                        totalPerItemEl.innerText = "Totalt: " + totalPerItem + " kr";
+                    }
+                })
             }
 
         })
@@ -95,28 +106,35 @@ class ShoppingCart {
     }
     removeFromBalance(index) {
         if (this.#balanceArr[index] == 1) {
-            document.getElementById("add" + index).disabled = true;
+            // document.getElementById("add" + index).disabled = true;
             this.#balanceArr[index]--;
             this.#product1[index]++;
+            this.#savedProductsInCart++;
+            console.log(this.#savedProductsInCart)
             document.querySelector("#amountText" + index).innerText = "Antal: " + this.#product1[index];
         }
         else if (this.#balanceArr[index] > 0) {
             this.#balanceArr[index]--;
             this.#product1[index]++;
+            this.#savedProductsInCart++;
+            console.log(this.#savedProductsInCart)
             document.querySelector("#amountText" + index).innerText = "Antal: " + this.#product1[index];
         }
     }
     addToBalance(amount, index) {
         if (amount == 2) { // om antal är 1 => kan inte klicka på minus mer
-            document.getElementById("remove" + index).disabled = true;
+            // document.getElementById("remove" + index).disabled = true;
             this.#balanceArr[index]++;
             this.#product1[index]--;
+            this.#savedProductsInCart--;
+            console.log(this.#savedProductsInCart)
             document.querySelector("#amountText" + index).innerText = "Antal: " + this.#product1[index];
         }
-        else if (amount <= this.#savedBalanceArr[index])
-        {
+        else if (amount <= this.#savedBalanceArr[index]) {
             this.#product1[index]--;
             this.#balanceArr[index]++;
+            this.#savedProductsInCart--;
+            console.log(this.#savedProductsInCart)
             document.querySelector("#amountText" + index).innerText = "Antal: " + this.#product1[index];
         }
         else {
@@ -125,7 +143,8 @@ class ShoppingCart {
     }
     addCookies() {
         Cookie.set("cartArray", JSON.stringify(this.#savedProductsFromCookies), { expires: 1 });
-        Cookie.set("balanceArray", JSON.stringify(this.#balanceArr), { expires: 1 })
+        Cookie.set("balanceArray", JSON.stringify(this.#balanceArr), { expires: 1 });
+        Cookie.set("productsInCart", this.#savedProductsInCart, { expires: 1 });
     }
 
 }
