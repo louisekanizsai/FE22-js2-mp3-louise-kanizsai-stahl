@@ -65,6 +65,8 @@ class ShoppingCart {
                 productName.innerText = this.#productNames[index];
                 productPrice.innerText = "Pris per st: " + this.#productPrices[index] + " kr";
                 let totalPerItem = (product[1] * this.#productPrices[index]);
+
+                
                 totalPerItemEl.innerText = "Totalt: " + totalPerItem + " kr";
                 productImg.src = this.#productImgs[index];
 
@@ -106,7 +108,11 @@ class ShoppingCart {
             }
 
         })
+
+
         this.#totalAmountP.innerText = "x"
+
+
         const cancelBtn = document.querySelector("#cancel");
         cancelBtn.addEventListener("click", () => {
 
