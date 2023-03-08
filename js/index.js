@@ -20,10 +20,10 @@ class Products {
     #cartArray;
     #productsInCart;
     constructor() {
-        this.#balanceArray = [];
         this.#baseUrl = 'https://mp3-webbshop-default-rtdb.europe-west1.firebasedatabase.app/';
         // kollar om cookies finns. om inte: skapa cart
         if (Cookie.get("productsInCart") == undefined) {
+            this.#balanceArray = [];
             this.#productsInCart = 0;
             this.createCart();
             this.currentBalance();
@@ -32,11 +32,25 @@ class Products {
                     this.createProductCards(products);
                 })
         }
-        else { // om cookies finns: skapa cart efter cookies. 
-
+        // detta ska hända när köpets genomförts. Då finns alla cookies förutom balancearray, som ska skapas på nytt
+        else if (Cookie.get("productsInCart") !== undefined && Cookie.get("balanceArray") == undefined){ 
+            this.#balanceArray = [];
+            console.log("else if händer")
+            this.#cartArray = JSON.parse(Cookie.get("cartArray"));
+            this.#productsInCart = Cookie.get("productsInCart");
+            this.currentBalance()
+            this.displayCookieInCart();
+            this.getFirebase()
+                .then(products => {
+                    console.log(products)
+                    this.createProductCards(products);
+                })
+        }
+        else { // om alla cookies finns: skapa cart efter cookies. 
             this.#cartArray = JSON.parse(Cookie.get("cartArray"));
             this.#productsInCart = Cookie.get("productsInCart");
             this.#balanceArray = JSON.parse(Cookie.get("balanceArray"));
+
             this.displayCookieInCart();
             this.getFirebase()
                 .then(products => {
@@ -88,6 +102,7 @@ class Products {
     // skapar en array (balancearray) som bara innehåller saldot för varje produkt i dess index
     async currentBalance() {
         const productArray = await this.getFirebase();
+
         productArray.forEach(
             product => {
                 this.#balanceArray.push(product.balance)
