@@ -33,7 +33,6 @@ class ShoppingCart {
     async createShoppingCart() {
         const shoppingCartContainer = document.querySelector("#shoppingCartContainer");
 
-
         const shoppingCart = await this.getFirebase();
 
         shoppingCart.forEach(item => {

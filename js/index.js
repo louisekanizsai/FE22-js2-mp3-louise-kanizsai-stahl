@@ -1,6 +1,7 @@
-import Cookie from "../node_modules/js-cookie/dist/js.cookie.mjs"
+import Cookie from "../node_modules/js-cookie/dist/js.cookie.mjs";
+import anime from "../node_modules/animejs/lib/anime.es.js";
 
-// nollstället cookies
+// nollställer cookies
 // Cookie.remove("productsInCart");
 // Cookie.remove("cartArray");
 // Cookie.remove("balanceArray");
@@ -151,6 +152,16 @@ class Products {
 }
 
 const cartIcon = document.querySelector("#cart");
+
+anime({
+    targets: cartIcon,
+    scale: 0.7,
+    easing: 'linear',
+    loop: true,
+    direction: 'alternate',
+    duration: 1000
+})
+
 cartIcon.addEventListener("click", () => {
     location.assign("../html/cart.html");
 })
