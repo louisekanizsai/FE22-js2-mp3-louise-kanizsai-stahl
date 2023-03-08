@@ -21,7 +21,7 @@ class ShoppingCart {
         this.#balanceArr = JSON.parse(Cookie.get("balanceArray"));
         this.#savedProductsInCart = Cookie.get("productsInCart");
         this.#savedProductsFromCookies = JSON.parse(Cookie.get("cartArray"));
-        this.#totalAmountP = document.querySelector("#totalAmount");
+        this.#totalAmountP = 0;
 
         this.createShoppingCart();
 
@@ -66,7 +66,8 @@ class ShoppingCart {
                 productPrice.innerText = "Pris per st: " + this.#productPrices[index] + " kr";
                 let totalPerItem = (product[1] * this.#productPrices[index]);
 
-                
+                this.#totalAmountP += totalPerItem;
+
                 totalPerItemEl.innerText = "Totalt: " + totalPerItem + " kr";
                 productImg.src = this.#productImgs[index];
 
@@ -83,6 +84,8 @@ class ShoppingCart {
                         this.addCookies();
                         totalPerItem = (product[1] * this.#productPrices[index]);
                         totalPerItemEl.innerText = "Totalt: " + totalPerItem + " kr";
+                        this.#totalAmountP += this.#productPrices[index];
+                        document.getElementById('totalAmount').innerText = this.#totalAmountP;
                     }
                 }
                 )
@@ -96,32 +99,42 @@ class ShoppingCart {
                         this.addCookies();
                         totalPerItem = (product[1] * this.#productPrices[index]);
                         totalPerItemEl.innerText = "Totalt: " + totalPerItem + " kr";
+                        this.#totalAmountP -= this.#productPrices[index];
+                        document.getElementById('totalAmount').innerText = this.#totalAmountP;
                     }
                 })
                 trashCan.addEventListener("click", () => {
                     this.addToBalance(this.#product1[index], index, product[1]);
                     this.#savedProductsFromCookies[index][1] -= product[1];
                     console.log(this.#savedProductsFromCookies);
+                    this.#totalAmountP -= totalPerItem;
+                    document.getElementById('totalAmount').innerText = this.#totalAmountP;
                     this.addCookies();
                     document.getElementById("productInfoCard" + index).remove();
                 })
             }
-
         })
 
-
-        this.#totalAmountP.innerText = "x"
+        document.getElementById('totalAmount').innerText = this.#totalAmountP;
 
 
         const cancelBtn = document.querySelector("#cancel");
         cancelBtn.addEventListener("click", () => {
+            
 
             this.#savedProductsFromCookies.forEach((product, index) => {
-                if (product[1] !== 0) {
+                console.log(product)
+                if (product[1] !== 0 ) {
                     this.addToBalance(this.#product1[index], index, product[1]);
                     this.#savedProductsFromCookies[index][1] -= product[1];
-                    this.addCookies();
                     document.getElementById("productInfoCard" + index).remove();
+                    this.#savedProductsInCart = 0;
+                    this.addCookies();
+                    location.assign("../index.html")
+                }
+                else if (product[1] == 0) {
+                    this.#savedProductsInCart = 0;
+                    this.addCookies();
                     location.assign("../index.html")
                 }
             })
@@ -144,10 +157,10 @@ class ShoppingCart {
                     setTimeout(() => {
                         Cookie.remove("balanceArray");
                         location.assign("../index.html");
-                      }, "500");
+                    }, "500");
                 })
         })
-        
+
     }
     async getFirebase() {
         const url = 'https://mp3-webbshop-default-rtdb.europe-west1.firebasedatabase.app/' + '.json';
@@ -167,7 +180,7 @@ class ShoppingCart {
             const obj = {
                 balance: newBalance
             }
-            console.log(obj); 
+            console.log(obj);
 
             const init = {
                 method: "PATCH",
