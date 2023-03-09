@@ -28,6 +28,7 @@ class Products {
             this.#numberOfProductsInCart = 0;
             this.createCart();
             this.currentBalance();
+            this.displayNumberOfProductsInCart();
             this.getFirebase()
                 .then(products => {
                     this.createProductCards(products);
@@ -95,7 +96,7 @@ class Products {
             this.#price = document.createElement('p');
             this.#price.innerText = product.price + ' kr';
             this.#buyBtn = document.createElement('button');
-            this.#buyBtn.innerText = 'Add to cart';
+            this.#buyBtn.innerText = 'Köp';
             this.#buyBtn.id = index;
             productCard.append(this.#img, this.#name, this.#price, this.#buyBtn);
 
@@ -135,7 +136,12 @@ class Products {
     }
     displayNumberOfProductsInCart() {
         const inCart = Cookie.get("numberOfProductsInCart");
-        document.querySelector("#amount").innerText = inCart;
+        if(inCart == undefined) { // Om det inte finns cookies
+            document.querySelector("#amount").innerText = "0";
+        }
+        else {
+            document.querySelector("#amount").innerText = inCart;
+        }
     }
 }
 const cartIcon = document.querySelector("#cart");

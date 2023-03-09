@@ -48,27 +48,41 @@ class ShoppingCart {
                 const productInfo = document.createElement("div");
                 productInfo.classList.add("productInfoCard");
                 productInfo.id = "productInfoCard" + index;
-                const productName = document.createElement("h3");
+
                 const productImg = document.createElement("img");
-                const removeOneBtn = document.createElement("button");
-                const addOneBtn = document.createElement("button");
-                const amountPerProduct = document.createElement("p");
+                
+                const productName = document.createElement("h3");
                 const productPrice = document.createElement("p");
+                const addContainer = document.createElement("div");
+                addContainer.id="addContainer";
+
+                const nameAmountContainer = document.createElement("div");
+                nameAmountContainer.append(productName,productPrice,addContainer);
+
+                nameAmountContainer.id = "nameAmountContainer";
+                
+                const removeOneBtn = document.createElement("button");
+                const amountPerProduct = document.createElement("p");
+                const addOneBtn = document.createElement("button");
+                addContainer.append(removeOneBtn,amountPerProduct,addOneBtn)
+
+
                 const totalPerItemEl = document.createElement("p");
                 const trashCan = document.createElement("img");
+                trashCan.id = "trashcan";
 
                 productName.innerText = this.#productNames[index];
                 productImg.src = this.#productImgs[index];
                 removeOneBtn.innerText = "-";
                 addOneBtn.innerText = "+";
-                amountPerProduct.innerText = "Antal: " + product[1];
+                amountPerProduct.innerText = product[1];
                 amountPerProduct.id = "amountText" + index;
                 productPrice.innerText = "Pris per st: " + this.#productPrices[index] + " kr";
                 let totalPerItem = (product[1] * this.#productPrices[index]);
                 this.#totalAmount += totalPerItem;
                 totalPerItemEl.innerText = "Totalt: " + totalPerItem + " kr";
                 trashCan.src = "../images/trash-can-svgrepo-com.svg"
-                productInfo.append(productName, productImg, removeOneBtn, addOneBtn, amountPerProduct, productPrice, totalPerItemEl, trashCan);
+                productInfo.append(productImg, nameAmountContainer, totalPerItemEl, trashCan);
                 shoppingCartContainer.append(productInfo);
                 // Lägg till en produkt
                 addOneBtn.addEventListener("click", () => {
@@ -78,11 +92,11 @@ class ShoppingCart {
                     else {
                         this.#savedProductsFromCartArray[index][1]++; //Öka antalet av vald produkt med 1
                         this.removeFromBalance(index);  //Ta sedan bort 1 från lagersaldot
-                        amountPerProduct.innerText = "Antal: " + product[1];
+                        amountPerProduct.innerText = product[1];
                         totalPerItem = (product[1] * this.#productPrices[index]);
                         totalPerItemEl.innerText = "Totalt: " + totalPerItem + " kr";
                         this.#totalAmount += this.#productPrices[index];
-                        document.getElementById('totalAmount').innerText = this.#totalAmount;
+                        document.getElementById('totalAmount').innerText = "Totalsumma: "+ this.#totalAmount + " kr";
                         this.addCookies();//Uppdatera cookies
                     }
                 }
@@ -95,11 +109,11 @@ class ShoppingCart {
                     else {
                         this.#savedProductsFromCartArray[index][1]--; //Minska antalet av vald produkt med 1
                         this.addToBalance(this.#numberOfSelectedProductArray[index], index, 1); //Lägg sedan till 1 av vald produkt till lagersaldot
-                        amountPerProduct.innerText = "Antal: " + product[1];
+                        amountPerProduct.innerText = product[1];
                         totalPerItem = (product[1] * this.#productPrices[index]);
                         totalPerItemEl.innerText = "Totalt: " + totalPerItem + " kr";
                         this.#totalAmount -= this.#productPrices[index];
-                        document.getElementById('totalAmount').innerText = this.#totalAmount;
+                        document.getElementById('totalAmount').innerText = "Totalsumma: "+ this.#totalAmount + " kr";
                         this.addCookies(); //Uppdatera cookies
                     }
                 })
@@ -108,7 +122,7 @@ class ShoppingCart {
                     this.addToBalance(this.#numberOfSelectedProductArray[index], index, product[1]); //Lägg till produkten och antalet till lagersaldot
                     this.#savedProductsFromCartArray[index][1] -= product[1]; //Ta bort produkten och antalet från kundvagnen
                     this.#totalAmount -= totalPerItem; //Minska totalpriset med det totala priset av varan som tas bort
-                    document.getElementById('totalAmount').innerText = this.#totalAmount;
+                    document.getElementById('totalAmount').innerText = "Totalsumma: " + this.#totalAmount + " kr";
                     this.addCookies();
                     document.getElementById("productInfoCard" + index).remove();
                 })
@@ -116,7 +130,7 @@ class ShoppingCart {
         })//forEach
 
         //Visa det totala priset
-        document.getElementById('totalAmount').innerText = this.#totalAmount;
+        document.getElementById('totalAmount').innerText = "Totalsumma: " + this.#totalAmount + " kr";
         //Avbryt köpet
         const cancelBtn = document.querySelector("#cancel");
         cancelBtn.addEventListener("click", () => {
@@ -172,13 +186,13 @@ class ShoppingCart {
             //Tar sedan bort produkten från kundkorgen
             this.#numberOfSelectedProductArray[index] -= amountDeletedFromCart;
             this.#savedNumberOfProductsInCart -= amountDeletedFromCart;
-            document.querySelector("#amountText" + index).innerText = "Antal: " + this.#numberOfSelectedProductArray[index];
+            document.querySelector("#amountText" + index).innerText = this.#numberOfSelectedProductArray[index];
         }
         else { //När amount är undefinned
             this.#balanceArray[index] += amountDeletedFromCart;//Lägger till produkten i lagersaldot 
             //Tar sedan bort produkten från kundkorgen
             this.#savedNumberOfProductsInCart -= amountDeletedFromCart;
-            document.querySelector("#amountText" + index).innerText = "Antal: " + this.#numberOfSelectedProductArray[index];
+            document.querySelector("#amountText" + index).innerText = this.#numberOfSelectedProductArray[index];
         }
     }
     //Minskar lagersaldot för vald produkt med 1
@@ -187,7 +201,7 @@ class ShoppingCart {
         //Lägger till vald produkt i kundkorgen
         this.#numberOfSelectedProductArray[index]++; 
         this.#savedNumberOfProductsInCart++;
-        document.querySelector("#amountText" + index).innerText = "Antal: " + this.#numberOfSelectedProductArray[index];
+        document.querySelector("#amountText" + index).innerText = this.#numberOfSelectedProductArray[index];
     }
     //Uppdaterar lagersaldot produkt för produkt 
     async patchFirebase() {
