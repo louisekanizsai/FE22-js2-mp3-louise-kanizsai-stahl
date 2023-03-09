@@ -15,5 +15,5 @@ Vi började med att koda köpsidan tillsammans och det flöt på bra. Under arbe
 Även denna README är skriven 50/50. Nu får vi ha delad vårdnad om detta projekt. Varannan vecka och varannan jul är det som gäller.
 
 ## Credits
-Bilder (bakgrundsbild och produktbilder): Unsplash.com
+Bilder (bakgrundsbild och produktbilder): Unsplash.com 
 Fonts: Google Fonts
