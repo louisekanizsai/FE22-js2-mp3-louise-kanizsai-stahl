@@ -4,155 +4,153 @@ console.log(document.cookie);
 
 // Cookie.remove("cartArray");
 // Cookie.remove("balanceArray");
-// Cookie.remove("productsInCart");
+// Cookie.remove("numberOfProductsInCart");
+// Cookie.remove("savedBalanceFromFirebase");
 
 class ShoppingCart {
+    #balanceArray;
+    #savedBalanceFromFirebase;
+    #savedProductsFromCartArray;
+    #savedNumberOfProductsInCart;
     #productNames;
     #productPrices;
     #productImgs;
-    #balanceArr;
-    #savedProductsFromCookies;
-    #savedBalanceArr;
-    #savedProductsInCart;
-    #product1;
-    #totalAmountP;
+    #numberOfSelectedProductArray;
+    #totalAmount;
     constructor() {
-        this.#savedBalanceArr = JSON.parse(Cookie.get("savedBalanceArr"));
-        this.#balanceArr = JSON.parse(Cookie.get("balanceArray"));
-        this.#savedProductsInCart = Cookie.get("productsInCart");
-        this.#savedProductsFromCookies = JSON.parse(Cookie.get("cartArray"));
-        this.#totalAmountP = 0;
-
-        this.createShoppingCart();
-
-        this.#product1 = [];
+        //Hämtar cookies
+        this.#balanceArray = JSON.parse(Cookie.get("balanceArray"));
+        this.#savedBalanceFromFirebase = JSON.parse(Cookie.get("savedBalanceFromFirebase"));
+        this.#savedProductsFromCartArray = JSON.parse(Cookie.get("cartArray"));
+        this.#savedNumberOfProductsInCart = Cookie.get("numberOfProductsInCart");
+        //Är till en början tomma
         this.#productNames = [];
         this.#productPrices = [];
         this.#productImgs = [];
+        this.#numberOfSelectedProductArray = [];
+
+        this.#totalAmount = 0;
+        this.createShoppingCart();
     }
     async createShoppingCart() {
-        const shoppingCartContainer = document.querySelector("#shoppingCartContainer");
-
         const shoppingCart = await this.getFirebase();
-
         shoppingCart.forEach(item => {
             this.#productNames.push(item.name);
             this.#productPrices.push(item.price);
             this.#productImgs.push(item.img);
         })
-
-        this.#savedProductsFromCookies.forEach((product, index) => {
+        const shoppingCartContainer = document.querySelector("#shoppingCartContainer");
+        this.#savedProductsFromCartArray.forEach((product, index) => {
+            // product[1] är antalet av vald produkt, alltså skrivs bara de produkter som användaren har valt ut
             if (product[1] !== 0) {
+                this.#numberOfSelectedProductArray.push(product[1]);
+                // Skapar alla element, ger de text, class och id mm
                 const productInfo = document.createElement("div");
                 productInfo.classList.add("productInfoCard");
                 productInfo.id = "productInfoCard" + index;
-                shoppingCartContainer.append(productInfo);
-                const amountPerProduct = document.createElement("p");
                 const productName = document.createElement("h3");
+                const productImg = document.createElement("img");
+                const removeOneBtn = document.createElement("button");
+                const addOneBtn = document.createElement("button");
+                const amountPerProduct = document.createElement("p");
                 const productPrice = document.createElement("p");
                 const totalPerItemEl = document.createElement("p");
-                const productImg = document.createElement("img");
-                const addOneBtn = document.createElement("button");
-                const removeOneBtn = document.createElement("button");
-                addOneBtn.innerText = "+";
-                removeOneBtn.innerText = "-";
                 const trashCan = document.createElement("img");
-                trashCan.src = "../images/trash-can-svgrepo-com.svg"
-                productInfo.append(productName, productImg, removeOneBtn, addOneBtn, amountPerProduct, productPrice, totalPerItemEl, trashCan);
-                amountPerProduct.id = "amountText" + index;
-                amountPerProduct.innerText = "Antal: " + product[1];
+
                 productName.innerText = this.#productNames[index];
+                productImg.src = this.#productImgs[index];
+                removeOneBtn.innerText = "-";
+                addOneBtn.innerText = "+";
+                amountPerProduct.innerText = "Antal: " + product[1];
+                amountPerProduct.id = "amountText" + index;
                 productPrice.innerText = "Pris per st: " + this.#productPrices[index] + " kr";
                 let totalPerItem = (product[1] * this.#productPrices[index]);
-
-                this.#totalAmountP += totalPerItem;
-
+                this.#totalAmount += totalPerItem;
                 totalPerItemEl.innerText = "Totalt: " + totalPerItem + " kr";
-                productImg.src = this.#productImgs[index];
-
-                this.#product1.push(product[1]);
-
+                trashCan.src = "../images/trash-can-svgrepo-com.svg"
+                productInfo.append(productName, productImg, removeOneBtn, addOneBtn, amountPerProduct, productPrice, totalPerItemEl, trashCan);
+                shoppingCartContainer.append(productInfo);
+                // Lägg till en produkt
                 addOneBtn.addEventListener("click", () => {
-                    if (product[1] >= this.#savedBalanceArr[index]) { // om antal produkter har nått så många som finns i saldot, kan man inte lägga till fler
+                    if (product[1] >= this.#savedBalanceFromFirebase[index]) { // om antal produkter har nått så många som finns i saldot, kan man inte lägga till fler
                         alert("Det finns inga fler i lager av denna vara!");
                     }
                     else {
-                        this.#savedProductsFromCookies[index][1]++;
-                        this.removeFromBalance(index);
+                        this.#savedProductsFromCartArray[index][1]++; //Öka antalet av vald produkt med 1
+                        this.removeFromBalance(index);  //Ta sedan bort 1 från lagersaldot
                         amountPerProduct.innerText = "Antal: " + product[1];
-                        this.addCookies();
                         totalPerItem = (product[1] * this.#productPrices[index]);
                         totalPerItemEl.innerText = "Totalt: " + totalPerItem + " kr";
-                        this.#totalAmountP += this.#productPrices[index];
-                        document.getElementById('totalAmount').innerText = this.#totalAmountP;
+                        this.#totalAmount += this.#productPrices[index];
+                        document.getElementById('totalAmount').innerText = this.#totalAmount;
+                        this.addCookies();//Uppdatera cookies
                     }
                 }
                 )
+                //Ta bort en produkt
                 removeOneBtn.addEventListener("click", () => {
                     if (product[1] <= 1) { // man kan inte ta bort den sista produkten genom att klicka på minus
                         alert("Klicka på papperskorgen för att ta bort denna vara.");
                     }
                     else {
-                        this.#savedProductsFromCookies[index][1]--;
-                        this.addToBalance(this.#product1[index], index, 1);
-                        this.addCookies();
+                        this.#savedProductsFromCartArray[index][1]--; //Minska antalet av vald produkt med 1
+                        this.addToBalance(this.#numberOfSelectedProductArray[index], index, 1); //Lägg sedan till 1 av vald produkt till lagersaldot
+                        amountPerProduct.innerText = "Antal: " + product[1];
                         totalPerItem = (product[1] * this.#productPrices[index]);
                         totalPerItemEl.innerText = "Totalt: " + totalPerItem + " kr";
-                        this.#totalAmountP -= this.#productPrices[index];
-                        document.getElementById('totalAmount').innerText = this.#totalAmountP;
+                        this.#totalAmount -= this.#productPrices[index];
+                        document.getElementById('totalAmount').innerText = this.#totalAmount;
+                        this.addCookies(); //Uppdatera cookies
                     }
                 })
+                //Ta bort produkten och antalet av vald produkt
                 trashCan.addEventListener("click", () => {
-                    this.addToBalance(this.#product1[index], index, product[1]);
-                    this.#savedProductsFromCookies[index][1] -= product[1];
-                    console.log(this.#savedProductsFromCookies);
-                    this.#totalAmountP -= totalPerItem;
-                    document.getElementById('totalAmount').innerText = this.#totalAmountP;
+                    this.addToBalance(this.#numberOfSelectedProductArray[index], index, product[1]); //Lägg till produkten och antalet till lagersaldot
+                    this.#savedProductsFromCartArray[index][1] -= product[1]; //Ta bort produkten och antalet från kundvagnen
+                    this.#totalAmount -= totalPerItem; //Minska totalpriset med det totala priset av varan som tas bort
+                    document.getElementById('totalAmount').innerText = this.#totalAmount;
                     this.addCookies();
                     document.getElementById("productInfoCard" + index).remove();
                 })
-            }
-        })
+            }//If
+        })//forEach
 
-        document.getElementById('totalAmount').innerText = this.#totalAmountP;
-
-
+        //Visa det totala priset
+        document.getElementById('totalAmount').innerText = this.#totalAmount;
+        //Avbryt köpet
         const cancelBtn = document.querySelector("#cancel");
         cancelBtn.addEventListener("click", () => {
-            
-
-            this.#savedProductsFromCookies.forEach((product, index) => {
-                console.log(product)
-                if (product[1] !== 0 ) {
-                    this.addToBalance(this.#product1[index], index, product[1]);
-                    this.#savedProductsFromCookies[index][1] -= product[1];
-                    document.getElementById("productInfoCard" + index).remove();
-                    this.#savedProductsInCart = 0;
+            //Loopa igenom kundvagnen för att kunna ta bort varje enskild produkt
+            this.#savedProductsFromCartArray.forEach((product, index) => {
+                if (product[1] !== 0) {
+                    this.addToBalance(this.#numberOfSelectedProductArray[index], index, product[1]); //Lägg till produkten och antalet till lagersaldot
+                    this.#savedProductsFromCartArray[index][1] -= product[1]; //Ta bort produkten och antalet från kundvagnen
+                    document.getElementById("productInfoCard" + index).remove();//Ta bort produktens container
+                    this.addCookies();//Uppdatera cookies
+                    location.assign("../index.html")
+                }
+                else if (product[1] == 0) { //Om kunden tagit bort alla varor själv innan den har tryckt på cancel-knappen
+                    this.#savedNumberOfProductsInCart = 0;
                     this.addCookies();
                     location.assign("../index.html")
                 }
-                else if (product[1] == 0) {
-                    this.#savedProductsInCart = 0;
-                    this.addCookies();
-                    location.assign("../index.html")
-                }
-            })
-        })
+            })//forEach
+        })//EventListener
+        //Genomför köpet
         const confirmPurchaseBtn = document.querySelector("#buy");
         confirmPurchaseBtn.addEventListener("click", () => {
-            this.patchFirebase()
-                .then(() => {
-                    this.#savedProductsFromCookies.forEach((product, index) => {
+            this.patchFirebase() //uppdatera firebase
+                .then(() => { //Efter det ta bort produkterna som kunden köpt
+                    this.#savedProductsFromCartArray.forEach((product, index) => {
                         if (product[1] !== 0) {
-                            this.addToBalance(this.#product1[index], index, product[1]);
-                            this.#savedProductsFromCookies[index][1] -= product[1];
-                            document.getElementById("productInfoCard" + index).remove();
+                            this.addToBalance(this.#numberOfSelectedProductArray[index], index, product[1]); //Lägg till produkten och antalet till lagersaldot
+                            this.#savedProductsFromCartArray[index][1] -= product[1]; //Ta bort produkten och antalet från kundvagnen
+                            document.getElementById("productInfoCard" + index).remove();//Ta bort produktens container
                         }
                     })
-
-                    this.#savedProductsInCart = 0;
-                    this.addCookies();
-
+                    this.#savedNumberOfProductsInCart = 0;
+                    this.addCookies();//uppdatera cookies
+                    //Ta bort balanceArray-cookien då den kommer att uppdateras när kunden kommer tillbaka till index.html
                     setTimeout(() => {
                         Cookie.remove("balanceArray");
                         location.assign("../index.html");
@@ -160,27 +158,45 @@ class ShoppingCart {
                 })
         })
 
-    }
+    }//createShoppingCart
     async getFirebase() {
         const url = 'https://mp3-webbshop-default-rtdb.europe-west1.firebasedatabase.app/' + '.json';
         const response = await fetch(url);
         const productArray = await response.json();
         return productArray;
     }
+    //Ökar lagersaldot med antalet av vald produkt som tagits bort
+    addToBalance(amount, index, amountDeletedFromCart) {
+        if (amount <= this.#savedBalanceFromFirebase[index]) {
+            this.#balanceArray[index] += amountDeletedFromCart; //Lägger till produkten i lagersaldot 
+            //Tar sedan bort produkten från kundkorgen
+            this.#numberOfSelectedProductArray[index] -= amountDeletedFromCart;
+            this.#savedNumberOfProductsInCart -= amountDeletedFromCart;
+            document.querySelector("#amountText" + index).innerText = "Antal: " + this.#numberOfSelectedProductArray[index];
+        }
+        else { //När amount är undefinned
+            this.#balanceArray[index] += amountDeletedFromCart;//Lägger till produkten i lagersaldot 
+            //Tar sedan bort produkten från kundkorgen
+            this.#savedNumberOfProductsInCart -= amountDeletedFromCart;
+            document.querySelector("#amountText" + index).innerText = "Antal: " + this.#numberOfSelectedProductArray[index];
+        }
+    }
+    //Minskar lagersaldot för vald produkt med 1
+    removeFromBalance(index) {
+        this.#balanceArray[index]--; 
+        //Lägger till vald produkt i kundkorgen
+        this.#numberOfSelectedProductArray[index]++; 
+        this.#savedNumberOfProductsInCart++;
+        document.querySelector("#amountText" + index).innerText = "Antal: " + this.#numberOfSelectedProductArray[index];
+    }
+    //Uppdaterar lagersaldot produkt för produkt 
     async patchFirebase() {
-        // this.#savedBalanceArr = array som innehåller saldot på alla produkter i firebase
-        // vad vi ska patcha: this.#savedBalanceArr[på ett index] - product[1] = antal kvar i saldot
-
-        this.#savedProductsFromCookies.forEach((product, index) => {
+        this.#savedProductsFromCartArray.forEach((product, index) => {
             const url = 'https://mp3-webbshop-default-rtdb.europe-west1.firebasedatabase.app/' + index + '.json';
-            let newBalance = (this.#savedBalanceArr[index] - product[1]);
-            console.log("savedbalancearr", this.#savedBalanceArr)
-            console.log("product[1]", product[1])
+            let newBalance = (this.#savedBalanceFromFirebase[index] - product[1]);
             const obj = {
                 balance: newBalance
             }
-            console.log(obj);
-
             const init = {
                 method: "PATCH",
                 body: JSON.stringify(obj),
@@ -188,53 +204,14 @@ class ShoppingCart {
                     "Content-type": "application/json; charset=UTF-8"
                 }
             };
-
-            fetch(url, init)
-                .then(response => response.json())
-                .then(data => console.log(data));
-        })
-    }
-    removeFromBalance(index) {
-        if (this.#balanceArr[index] == 1) {
-            this.#balanceArr[index]--;
-            this.#product1[index]++;
-            this.#savedProductsInCart++;
-            console.log(this.#savedProductsInCart)
-            document.querySelector("#amountText" + index).innerText = "Antal: " + this.#product1[index];
-        }
-        else if (this.#balanceArr[index] > 0) {
-            this.#balanceArr[index]--;
-            this.#product1[index]++;
-            this.#savedProductsInCart++;
-            console.log(this.#savedProductsInCart)
-            document.querySelector("#amountText" + index).innerText = "Antal: " + this.#product1[index];
-        }
-    }
-    addToBalance(amount, index, amountDeletedFromCart) {
-        if (amount == 2) { // om antal är 1 => kan inte klicka på minus mer
-            // document.getElementById("remove" + index).disabled = true;
-            this.#balanceArr[index] += amountDeletedFromCart;
-            this.#product1[index] -= amountDeletedFromCart;
-            this.#savedProductsInCart -= amountDeletedFromCart;
-            console.log(this.#savedProductsInCart)
-            document.querySelector("#amountText" + index).innerText = "Antal: " + this.#product1[index];
-        }
-        else if (amount <= this.#savedBalanceArr[index]) {
-            this.#product1[index] -= amountDeletedFromCart;
-            this.#balanceArr[index] += amountDeletedFromCart;
-            this.#savedProductsInCart -= amountDeletedFromCart;
-            console.log(this.#savedProductsInCart)
-            document.querySelector("#amountText" + index).innerText = "Antal: " + this.#product1[index];
-        }
-        else {
-            console.log("else händer")
-        }
+            fetch(url, init).then(response => response.json());
+        });
     }
     addCookies() {
-        Cookie.set("cartArray", JSON.stringify(this.#savedProductsFromCookies), { expires: 1 });
-        Cookie.set("balanceArray", JSON.stringify(this.#balanceArr), { expires: 1 });
-        Cookie.set("productsInCart", this.#savedProductsInCart, { expires: 1 });
+        Cookie.set("cartArray", JSON.stringify(this.#savedProductsFromCartArray), { expires: 1 });
+        Cookie.set("balanceArray", JSON.stringify(this.#balanceArray), { expires: 1 });
+        Cookie.set("numberOfProductsInCart", this.#savedNumberOfProductsInCart, { expires: 1 });
     }
 }
 
-const hej = new ShoppingCart();
+const cartSite = new ShoppingCart();
